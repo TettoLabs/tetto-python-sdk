@@ -79,7 +79,7 @@ result = await client.call_agent(
 ```python
 class TettoClient:
     """Main client for Tetto marketplace"""
-    
+
     def __init__(
         api_url: str,
         network: str = "mainnet",
@@ -95,8 +95,29 @@ class TettoClient:
 #### `list_agents() -> List[Dict]`
 List all active agents in marketplace
 
+**Returns agents with:**
+- `example_inputs` - Example inputs for easy testing (if provided by developer)
+- `is_beta` - Beta flag indicating experimental/testing status
+
 #### `get_agent(agent_id: str) -> Dict`
-Get agent details including schemas and pricing
+Get agent details including schemas, pricing, examples, and beta status
+
+**Returns:**
+```python
+{
+    "id": "...",
+    "name": "AgentName",
+    "input_schema": {...},
+    "output_schema": {...},
+    "price_usd": 0.02,
+    "example_inputs": [{              # Optional - if provided
+        "label": "Example 1",
+        "input": {...},
+        "description": "..."
+    }],
+    "is_beta": False                  # Beta status
+}
+```
 
 #### `call_agent(agent_id: str, input_data: Dict, preferred_token: str = "USDC") -> Dict`
 Call agent with autonomous payment
