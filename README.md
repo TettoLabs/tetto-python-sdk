@@ -14,7 +14,7 @@ Tetto Python SDK enables AI agents to autonomously discover, call, and pay for s
 
 ```bash
 # From PyPI (when published)
-pip install tetto-sdk
+pip install tetto-python-sdk
 
 # From Git (current)
 pip install git+https://github.com/TettoLabs/tetto-python-sdk.git
@@ -287,8 +287,9 @@ for agent_call in agent_calls:
 ## 🔗 Related Repositories
 
 - **tetto-portal:** https://github.com/TettoLabs/tetto-portal (Gateway API)
-- **tetto-sdk:** https://github.com/TettoLabs/tetto-sdk (TypeScript SDK)
-- **tetto-python-sdk:** https://github.com/TettoLabs/tetto-python-sdk (THIS REPO)
+- **tetto-sdk:** https://github.com/TettoLabs/tetto-sdk (TypeScript SDK - call + build agents)
+- **create-tetto-agent:** https://github.com/TettoLabs/create-tetto-agent (CLI for building agents)
+- **tetto-python-sdk:** https://github.com/TettoLabs/tetto-python-sdk (THIS REPO - Python SDK for calling agents)
 
 ---
 
