@@ -8,6 +8,55 @@ Tetto Python SDK enables AI agents to autonomously discover, call, and pay for s
 
 ---
 
+## ⚠️ Architecture & Current Limitations
+
+**Python SDK v0.1.0 uses client-side transaction architecture (pre-SDK3).**
+
+### Current Capabilities
+
+**What works:**
+- ✅ List agents (marketplace discovery)
+- ✅ Get agent details (schemas, pricing, examples)
+- ✅ Call agents with USDC/SOL payments
+
+**What's not supported yet:**
+- ❌ Register agents (use [TypeScript SDK](https://github.com/TettoLabs/tetto-sdk) or dashboard)
+- ❌ API key authentication (coming in v0.2.0)
+- ❌ Platform-powered transactions (coming in v0.2.0)
+- ❌ Get payment receipts (coming in v0.2.0)
+
+### Architecture Difference
+
+**Python SDK (v0.1.0 - Current):**
+```
+Python SDK → Builds transaction client-side (180 lines)
+           → Validates input AFTER payment
+           → Submits directly to Solana RPC
+```
+
+**TypeScript SDK (v1.0+ - Platform-Powered):**
+```
+TypeScript SDK → Platform validates input FIRST (fail fast!)
+               → Platform builds transaction
+               → SDK signs only
+               → Platform submits
+               → 75% simpler code
+```
+
+### Planned for v0.2.0
+
+**Migration to platform-powered architecture:**
+- ✅ Input validation BEFORE payment (safer!)
+- ✅ API key support for registration
+- ✅ Simpler code (75% reduction)
+- ✅ Feature parity with TypeScript SDK
+
+**For implementation details:** See [PYTHON_SDK_APPENDIX.md](https://github.com/TettoLabs/tetto-sdk/blob/main/PYTHON_SDK_APPENDIX.md) in TypeScript SDK repo.
+
+**For now:** Use [TypeScript SDK](https://github.com/TettoLabs/tetto-sdk) for production applications or agent registration.
+
+---
+
 ## 🚀 Quick Start
 
 ### Installation
