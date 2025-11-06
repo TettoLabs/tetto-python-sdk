@@ -19,7 +19,7 @@
 
 ## 🚀 Current Status
 
-**Status:** ✅ v0.1.0 FOUNDATION COMPLETE (MVP3 CP6)
+**Status:** ✅ v0.1.0 FOUNDATION COMPLETE
 
 **Version:** 0.1.0 (Initial Release)
 
@@ -194,7 +194,7 @@ transfer(from=payer, to=protocol, lamports=fee)
 
 ## 🎯 Future Plans
 
-**Post-MVP:**
+**Planned Enhancements:**
 - [ ] Publish to PyPI as `tetto-sdk`
 - [ ] Add full USDC support (currently SOL only works reliably)
 - [ ] Add LangChain tool (tetto_langchain package)

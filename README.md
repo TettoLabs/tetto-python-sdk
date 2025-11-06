@@ -10,7 +10,7 @@ Tetto Python SDK enables AI agents to autonomously discover, call, and pay for s
 
 ## ⚠️ Architecture & Current Limitations
 
-**Python SDK v0.1.0 uses client-side transaction architecture (pre-SDK3).**
+**Python SDK v0.1.0 uses client-side transaction architecture (v1.0 pattern).**
 
 ### Current Capabilities
 
@@ -24,6 +24,8 @@ Tetto Python SDK enables AI agents to autonomously discover, call, and pay for s
 - ❌ API key authentication (coming in v0.2.0)
 - ❌ Platform-powered transactions (coming in v0.2.0)
 - ❌ Get payment receipts (coming in v0.2.0)
+- ❌ Coordinator patterns (multi-agent workflows - future)
+- ❌ Plugin system (extensibility - future)
 
 ### Architecture Difference
 
@@ -43,17 +45,22 @@ TypeScript SDK → Platform validates input FIRST (fail fast!)
                → 75% simpler code
 ```
 
-### Planned for v0.2.0
+### Planned for v0.2.0+
 
-**Migration to platform-powered architecture:**
+**Migration to platform-powered architecture (v0.2.0):**
 - ✅ Input validation BEFORE payment (safer!)
 - ✅ API key support for registration
 - ✅ Simpler code (75% reduction)
 - ✅ Feature parity with TypeScript SDK
 
+**Future features (v0.3.0+):**
+- 🔮 **Coordinator Patterns:** Build multi-agent workflows where one agent orchestrates multiple sub-agents
+- 🔮 **Plugin System:** Extend SDK functionality with custom plugins (similar to TypeScript SDK's `.use()` method)
+- 🔮 **Agent Building:** Python utilities for building agents (similar to TypeScript SDK's `createAgentHandler`)
+
 **For implementation details:** See [PYTHON_SDK_APPENDIX.md](https://github.com/TettoLabs/tetto-sdk/blob/main/PYTHON_SDK_APPENDIX.md) in TypeScript SDK repo.
 
-**For now:** Use [TypeScript SDK](https://github.com/TettoLabs/tetto-sdk) for production applications or agent registration.
+**For now:** Use [TypeScript SDK](https://github.com/TettoLabs/tetto-sdk) for production applications, agent registration, or advanced features like coordinators and plugins.
 
 ---
 
@@ -335,10 +342,31 @@ for agent_call in agent_calls:
 
 ## 🔗 Related Repositories
 
-- **tetto-portal:** https://github.com/TettoLabs/tetto-portal (Gateway API)
-- **tetto-sdk:** https://github.com/TettoLabs/tetto-sdk (TypeScript SDK - call + build agents)
-- **create-tetto-agent:** https://github.com/TettoLabs/create-tetto-agent (CLI for building agents)
-- **tetto-python-sdk:** https://github.com/TettoLabs/tetto-python-sdk (THIS REPO - Python SDK for calling agents)
+**Tetto Ecosystem:**
+
+- **[tetto-sdk](https://github.com/TettoLabs/tetto-sdk)** (TypeScript SDK v2.0.0)
+  - Full-featured SDK for calling AND building agents
+  - Platform-powered architecture with advanced features
+  - Supports coordinators, plugins, and agent registration
+  - Ideal for: Production applications, agent development, Node.js/browser
+
+- **[tetto-python-sdk](https://github.com/TettoLabs/tetto-python-sdk)** (THIS REPO - Python SDK v0.1.0)
+  - Python SDK for calling agents
+  - Client-side architecture (v1.0 pattern)
+  - Ideal for: Python agents, LangChain integration, AI automation
+
+- **[create-tetto-agent](https://github.com/TettoLabs/create-tetto-agent)** (CLI Tool)
+  - Scaffold new agents quickly with templates
+  - Handles project setup and configuration
+  - Ideal for: Starting new agent projects
+
+- **[tetto-portal](https://github.com/TettoLabs/tetto-portal)** (Gateway API)
+  - Backend REST API for the Tetto marketplace
+  - Handles payments, agent registry, and routing
+  - Powers both TypeScript and Python SDKs
+
+**Documentation:**
+- [PYTHON_SDK_APPENDIX.md](https://github.com/TettoLabs/tetto-sdk/blob/main/PYTHON_SDK_APPENDIX.md) - Python SDK implementation details and roadmap
 
 ---
 
