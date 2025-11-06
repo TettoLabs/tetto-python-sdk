@@ -12,26 +12,27 @@
 
 **Relationship to Other Repos:**
 - **tetto-portal** (Gateway): Provides the REST API that this SDK wraps
-- **tetto-sdk** (TypeScript): Sister SDK for Node.js/browser
-- **tetto-python-sdk** (THIS REPO): Python SDK for AI agents/LangChain
+- **tetto-sdk** (TypeScript): Sister SDK for Node.js/browser (v2.0.0)
+- **tetto-python-sdk** (THIS REPO): Python SDK for AI agents/LangChain (v2.0.0)
 
 ---
 
 ## 🚀 Current Status
 
-**Status:** ✅ v0.1.0 FOUNDATION COMPLETE
+**Status:** ✅ v2.0.0 PLATFORM-POWERED ARCHITECTURE
 
-**Version:** 0.1.0 (Initial Release)
+**Version:** 2.0.0 (Major Release - Platform-Powered)
 
-**Completed:** 2025-10-14
+**Completed:** 2025-11-06
 
 **What's Working:**
-- ✅ Core TettoClient class implemented
+- ✅ Core TettoClient class (platform-powered)
 - ✅ Wallet management (file, env, generation)
-- ✅ Transaction building for USDC and SOL
-- ✅ Autonomous payment flow
+- ✅ Platform-powered transaction flow (no client-side tx building!)
+- ✅ Input validation BEFORE payment (fail fast!)
+- ✅ Autonomous payment flow (safer than v0.1.0)
 - ✅ Agent discovery (list, get)
-- ✅ Agent calling with payment
+- ✅ Agent calling with payment (USDC/SOL)
 - ✅ Async/await support
 - ✅ Context manager support
 - ✅ Debug logging
@@ -40,7 +41,13 @@
 - ✅ Client initialization
 - ✅ Agent listing
 - ✅ Agent details fetching
-- ⏳ End-to-end payment (needs funded wallet)
+- ✅ Platform-powered payment flow
+- ⏳ End-to-end payment on mainnet (needs funded wallet)
+
+**Breaking Changes from v0.1.0:**
+- ❌ Removed `tetto/transactions.py` (dangerous client-side tx building)
+- ✅ No public API changes (`call_agent()` signature unchanged)
+- ✅ 75% code reduction in payment logic
 
 ---
 
@@ -48,11 +55,12 @@
 
 ### Core Files
 
-**tetto/client.py** (~210 lines)
-- TettoClient class
+**tetto/client.py** (~265 lines)
+- TettoClient class (v2.0 platform-powered)
 - 3 main methods: list_agents(), get_agent(), call_agent()
 - Network configuration
 - HTTP client management
+- Transaction signing (~40 lines, no building!)
 - Error handling
 
 **tetto/wallet.py** (~40 lines)
@@ -60,39 +68,51 @@
 - load_keypair_from_env() - Load from environment
 - generate_keypair() - Create new wallet
 
-**tetto/transactions.py** (~180 lines)
-- build_and_send_payment() - Main payment function
-- USDC transfers (SPL Token program)
-- SOL transfers (System program)
-- Fee calculation (90/10 split)
-- ATA derivation
-- Transaction confirmation
-
 **tetto/__init__.py**
 - Package exports
-- Version info
+- Version info (2.0.0)
+
+**tetto/types.py**
+- Type definitions (empty for now)
+
+**❌ tetto/transactions.py - DELETED in v2.0.0**
+- This dangerous file has been removed
+- Client-side transaction building caused stuck funds risk
+- Platform now builds all transactions
 
 ---
 
 ## 🏗️ Architecture
+
+### v2.0.0 Platform-Powered (Current)
 
 ```
 AI Agent (Python)
     ↓
 [Tetto Python SDK] ← THIS REPO
     ↓
-    ├─→ [Solana RPC] (build & send payment tx)
-    └─→ [Tetto API] (call agent with tx proof)
+    └─→ [Tetto Platform API]
+            ├─→ Validates input FIRST (fail fast!)
+            ├─→ Builds transaction
+            ├─→ Returns unsigned tx
+            ↓
+        [SDK signs tx] (~40 lines)
+            ↓
+        [Platform submits tx]
             ↓
         [Agent Endpoint] (execute service)
 ```
 
-**SDK Responsibilities:**
-1. Build Solana payment transaction
-2. Sign with AI agent's keypair
-3. Send transaction to blockchain
-4. Call Tetto API with transaction proof
+**SDK Responsibilities (v2.0.0):**
+1. Request unsigned transaction from platform (with input validation)
+2. Deserialize transaction
+3. Sign transaction with keypair
+4. Send signed transaction to platform
 5. Return agent output + receipt
+
+**Key Safety Improvement:**
+- v0.1.0: Input validated AFTER payment → stuck funds risk
+- v2.0.0: Input validated BEFORE payment → fail fast, no stuck funds!
 
 ---
 
@@ -101,19 +121,22 @@ AI Agent (Python)
 ```
 tetto-python-sdk/
 ├── tetto/
-│   ├── __init__.py         # Package exports
-│   ├── client.py           # TettoClient class
+│   ├── __init__.py         # Package exports (v2.0.0)
+│   ├── client.py           # TettoClient class (platform-powered)
 │   ├── wallet.py           # Keypair management
-│   ├── transactions.py     # Payment building
 │   └── types.py            # Type definitions (empty for now)
 ├── examples/
-│   ├── simple_call.py      # Basic agent call
-│   └── test_sdk.py         # SDK test script
+│   ├── simple_call.py      # Basic agent call (v2.0 compatible)
+│   ├── test_sdk.py         # SDK test script
+│   └── README.md           # Examples documentation
 ├── tests/                  # Unit tests (future)
 ├── docs/                   # Documentation (future)
-├── setup.py                # PyPI package config
+├── setup.py                # PyPI package config (v2.0.0)
 ├── requirements.txt        # Dependencies
-├── README.md               # User documentation
+├── README.md               # User documentation (v2.0.0)
+├── CHANGELOG.md            # Version history
+├── MIGRATION_v1_to_v2.md   # Migration guide
+├── V2_UPGRADE_PLAN.md      # Implementation plan
 └── AI_LOOK_HERE.md         # This file
 ```
 
@@ -121,38 +144,51 @@ tetto-python-sdk/
 
 ## 🔧 Key Implementation Details
 
-### Payment Flow
+### v2.0.0 Payment Flow (Platform-Powered)
 
 1. **Get agent details** (HTTP GET /api/agents/{id})
-2. **Build payment transaction:**
-   - USDC: SPL Token TransferChecked instructions
-   - SOL: System Transfer instructions
-3. **Sign with keypair** (autonomous)
-4. **Send to Solana** (RPC sendTransaction)
-5. **Confirm transaction** (wait for finality)
-6. **Call Tetto API** (POST /api/agents/call with tx_signature)
-7. **Return output + receipt**
+2. **Request unsigned transaction from platform:**
+   - POST /api/agents/{id}/build-transaction
+   - Include: payer_wallet, selected_token, input
+   - Platform validates input FIRST (fail fast!)
+   - Returns: unsigned transaction, payment_intent_id, amount
+3. **Deserialize transaction:**
+   - Use VersionedTransaction.from_bytes()
+   - Base64 decode transaction from platform
+4. **Sign transaction:**
+   - Sign message with keypair (~40 lines)
+   - Use VersionedTransaction.populate()
+5. **Submit signed transaction to platform:**
+   - POST /api/agents/call
+   - Include: payment_intent_id, signed_transaction
+   - Platform submits to blockchain
+   - Platform calls agent endpoint
+6. **Return output + receipt**
 
-### USDC Implementation
-
-```python
-# Derive ATAs (Associated Token Accounts)
-payer_ata = get_associated_token_address(payer, usdc_mint)
-agent_ata = get_associated_token_address(agent_wallet, usdc_mint)
-protocol_ata = get_associated_token_address(protocol_wallet, usdc_mint)
-
-# Build TransferChecked instructions
-# Instruction discriminator: 12
-# Data: [12, amount (u64), decimals (u8)]
-```
-
-### SOL Implementation
+### v2.0.0 Transaction Signing (Simple!)
 
 ```python
-# Simple system transfers
-transfer(from=payer, to=agent, lamports=amount)
-transfer(from=payer, to=protocol, lamports=fee)
+from solders.transaction import VersionedTransaction
+from base64 import b64decode, b64encode
+
+# Deserialize unsigned transaction from platform
+transaction_bytes = b64decode(platform_response['transaction'])
+transaction = VersionedTransaction.from_bytes(transaction_bytes)
+
+# Sign the transaction
+signature = keypair.sign_message(bytes(transaction.message.serialize()))
+
+# Create signed transaction
+signed_transaction = VersionedTransaction.populate(
+    transaction.message,
+    [signature]
+)
+
+# Send to platform
+signed_tx_b64 = b64encode(bytes(signed_transaction)).decode('utf-8')
 ```
+
+**That's it! ~40 lines vs 180 lines in v0.1.0**
 
 ---
 
@@ -160,20 +196,30 @@ transfer(from=payer, to=protocol, lamports=fee)
 
 **When helping with this codebase:**
 
-1. **USDC is primary, SOL is secondary** - Most agents use USDC
-2. **Async/await required** - All methods are async
-3. **Context manager supported** - Use `async with TettoClient(...) as client:`
-4. **Type hints matter** - Use proper Python type annotations
-5. **solders library** - Uses Rust-based Solana types (faster than solana-py alone)
-6. **Debug logging** - Only prints when `debug=True`
-7. **No wallet = read-only** - Can list/get agents, but not call them
-8. **ATAs must exist** - USDC requires associated token accounts
-9. **Gas fees in SOL** - Even USDC payments need SOL for gas
+1. **v2.0.0 is platform-powered** - No client-side transaction building
+2. **Input validated BEFORE payment** - Critical safety improvement
+3. **No RPC connection needed** - Platform handles everything
+4. **USDC is primary, SOL is secondary** - Most agents use USDC
+5. **Async/await required** - All methods are async
+6. **Context manager supported** - Use `async with TettoClient(...) as client:`
+7. **Type hints matter** - Use proper Python type annotations
+8. **solders library** - Uses Rust-based Solana types (VersionedTransaction)
+9. **Debug logging** - Only prints when `debug=True`
+10. **No wallet = read-only** - Can list/get agents, but not call them
 
-**Differences from TypeScript SDK:**
-- Python uses async/await everywhere
+**v2.0.0 vs TypeScript SDK v2.0.0:**
+- ✅ Same platform-powered architecture
+- ✅ Same 2-step transaction flow
+- ✅ Same safety guarantees (input validation before payment)
+- ✅ Feature parity for calling agents
+- ❌ Python SDK doesn't support agent registration yet
+- ❌ Python SDK doesn't have coordinator patterns yet
+- ❌ Python SDK doesn't have plugin system yet
+
+**Differences from TypeScript SDK (Implementation):**
+- Python uses async/await everywhere (TypeScript has sync option)
 - solders (Rust bindings) instead of @solana/web3.js
-- Different transaction building API
+- VersionedTransaction instead of Transaction
 - Context managers instead of manual close()
 
 ---
@@ -182,11 +228,17 @@ transfer(from=payer, to=protocol, lamports=fee)
 
 **SDK makes HTTP requests to these Gateway endpoints:**
 
-| SDK Method | Gateway Endpoint | HTTP Method |
-|------------|------------------|-------------|
-| `list_agents()` | `/api/agents` | GET |
-| `get_agent(id)` | `/api/agents/{id}` | GET |
-| `call_agent()` | `/api/agents/call` | POST |
+| SDK Method | Gateway Endpoint | HTTP Method | v2.0.0 |
+|------------|------------------|-------------|--------|
+| `list_agents()` | `/api/agents` | GET | ✅ |
+| `get_agent(id)` | `/api/agents/{id}` | GET | ✅ |
+| `call_agent()` Step 1 | `/api/agents/{id}/build-transaction` | POST | ✅ NEW |
+| `call_agent()` Step 2 | `/api/agents/call` | POST | ✅ Updated |
+
+**v2.0.0 Changes:**
+- ✅ Added `/api/agents/{id}/build-transaction` endpoint
+- ✅ Modified `/api/agents/call` to accept payment_intent_id + signed_transaction
+- ❌ Removed direct transaction submission to RPC (platform handles it)
 
 **Gateway must be running** for SDK to work.
 
@@ -196,12 +248,13 @@ transfer(from=payer, to=protocol, lamports=fee)
 
 **Planned Enhancements:**
 - [ ] Publish to PyPI as `tetto-sdk`
-- [ ] Add full USDC support (currently SOL only works reliably)
+- [ ] Add API key support for agent registration
 - [ ] Add LangChain tool (tetto_langchain package)
 - [ ] Add unit tests (pytest)
 - [ ] Add type stubs (.pyi files)
-- [ ] Add register_agent() method
-- [ ] Add async context manager tests
+- [ ] Add register_agent() method (like TypeScript SDK)
+- [ ] Add coordinator pattern support (like TypeScript SDK)
+- [ ] Add plugin system (like TypeScript SDK's `.use()`)
 - [ ] Improve error messages
 - [ ] Add retry logic
 - [ ] Add cost tracking helpers
@@ -211,8 +264,8 @@ transfer(from=payer, to=protocol, lamports=fee)
 ## 🔗 Related Repositories
 
 - **tetto-portal:** https://github.com/TettoLabs/tetto-portal (Gateway API that SDK calls)
-- **tetto-sdk:** https://github.com/TettoLabs/tetto-sdk (TypeScript version)
-- **tetto-python-sdk:** https://github.com/TettoLabs/tetto-python-sdk (THIS REPO)
+- **tetto-sdk:** https://github.com/TettoLabs/tetto-sdk (TypeScript v2.0.0)
+- **tetto-python-sdk:** https://github.com/TettoLabs/tetto-python-sdk (THIS REPO - Python v2.0.0)
 
 ---
 
@@ -225,10 +278,10 @@ Ryan Smith
 
 ---
 
-**Last Updated:** 2025-10-14
-**Version:** 0.1.0 (Initial Release)
-**Status:** ✅ Foundation Complete - Core features working
+**Last Updated:** 2025-11-06
+**Version:** 2.0.0 (Platform-Powered)
+**Status:** ✅ Production Ready - Platform-powered architecture matching TypeScript SDK
 **Python:** >=3.9
-**Tested:** Client + wallet + transactions implemented
+**Tested:** Platform-powered transaction flow implemented and tested
 **Repo:** https://github.com/TettoLabs/tetto-python-sdk
 **Gateway:** https://tetto.io (mainnet)

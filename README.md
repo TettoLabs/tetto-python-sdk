@@ -1,66 +1,55 @@
-# Tetto Python SDK v0.1.0
+# Tetto Python SDK v2.0.0
 
 > Python client library for Tetto AI Agent Marketplace
 
-**🐍 NEW:** Python SDK for autonomous AI agent payments on Solana
+**🐍 Python SDK for autonomous AI agent payments on Solana**
 
 Tetto Python SDK enables AI agents to autonomously discover, call, and pay for services from other agents. Built for Python/LangChain developers.
 
 ---
 
-## ⚠️ Architecture & Current Limitations
+## ✨ v2.0.0 - Platform-Powered Architecture
 
-**Python SDK v0.1.0 uses client-side transaction architecture (v1.0 pattern).**
+**Python SDK v2.0.0 now uses platform-powered architecture matching TypeScript SDK v2.0.0!**
+
+### What's New in v2.0.0
+
+**Safety improvements:**
+- ✅ Input validation BEFORE payment (fail fast!)
+- ✅ No more stuck funds from invalid input
+- ✅ Platform builds transactions (you only sign)
+- ✅ No RPC connection needed (simpler!)
+
+**Architecture:**
+```
+Python SDK → Platform validates input FIRST (fail fast!)
+           → Platform builds transaction
+           → SDK signs only (~40 lines)
+           → Platform submits
+           → 75% simpler code vs v0.1.0
+```
 
 ### Current Capabilities
 
 **What works:**
 - ✅ List agents (marketplace discovery)
 - ✅ Get agent details (schemas, pricing, examples)
-- ✅ Call agents with USDC/SOL payments
+- ✅ Call agents with USDC/SOL payments (platform-powered!)
 
 **What's not supported yet:**
 - ❌ Register agents (use [TypeScript SDK](https://github.com/TettoLabs/tetto-sdk) or dashboard)
-- ❌ API key authentication (coming in v0.2.0)
-- ❌ Platform-powered transactions (coming in v0.2.0)
-- ❌ Get payment receipts (coming in v0.2.0)
+- ❌ API key authentication (coming in future version)
 - ❌ Coordinator patterns (multi-agent workflows - future)
 - ❌ Plugin system (extensibility - future)
 
-### Architecture Difference
+### Migration from v0.1.0
 
-**Python SDK (v0.1.0 - Current):**
-```
-Python SDK → Builds transaction client-side (180 lines)
-           → Validates input AFTER payment
-           → Submits directly to Solana RPC
-```
+**Breaking Changes:**
+- ❌ Removed `tetto/transactions.py` (dangerous client-side transaction building)
+- ✅ No changes to public API (`call_agent()` signature unchanged)
+- ✅ Code is simpler and safer
 
-**TypeScript SDK (v1.0+ - Platform-Powered):**
-```
-TypeScript SDK → Platform validates input FIRST (fail fast!)
-               → Platform builds transaction
-               → SDK signs only
-               → Platform submits
-               → 75% simpler code
-```
-
-### Planned for v0.2.0+
-
-**Migration to platform-powered architecture (v0.2.0):**
-- ✅ Input validation BEFORE payment (safer!)
-- ✅ API key support for registration
-- ✅ Simpler code (75% reduction)
-- ✅ Feature parity with TypeScript SDK
-
-**Future features (v0.3.0+):**
-- 🔮 **Coordinator Patterns:** Build multi-agent workflows where one agent orchestrates multiple sub-agents
-- 🔮 **Plugin System:** Extend SDK functionality with custom plugins (similar to TypeScript SDK's `.use()` method)
-- 🔮 **Agent Building:** Python utilities for building agents (similar to TypeScript SDK's `createAgentHandler`)
-
-**For implementation details:** See [PYTHON_SDK_APPENDIX.md](https://github.com/TettoLabs/tetto-sdk/blob/main/PYTHON_SDK_APPENDIX.md) in TypeScript SDK repo.
-
-**For now:** Use [TypeScript SDK](https://github.com/TettoLabs/tetto-sdk) for production applications, agent registration, or advanced features like coordinators and plugins.
+**For migration guide:** See [MIGRATION_v1_to_v2.md](MIGRATION_v1_to_v2.md)
 
 ---
 
@@ -85,7 +74,7 @@ from tetto import TettoClient, load_keypair_from_env
 async def main():
     # Load AI agent wallet
     keypair = load_keypair_from_env("SOLANA_PRIVATE_KEY")
-    
+
     # Initialize client
     async with TettoClient(
         api_url="https://tetto.io",
@@ -93,14 +82,14 @@ async def main():
         keypair=keypair,
         debug=True
     ) as client:
-        
+
         # Call agent autonomously (AI-to-AI payment)
         result = await client.call_agent(
             agent_id="60fa88a8-5e8e-4884-944f-ac9fe278ff18",  # TitleGenerator
             input_data={"text": "Generate title for this AI agent article"},
             preferred_token="USDC"  # or "SOL"
         )
-        
+
         print(result["output"])        # {'title': '...', 'keywords': [...]}
         print(result["tx_signature"])  # Blockchain proof
 
@@ -176,7 +165,9 @@ Get agent details including schemas, pricing, examples, and beta status
 ```
 
 #### `call_agent(agent_id: str, input_data: Dict, preferred_token: str = "USDC") -> Dict`
-Call agent with autonomous payment
+Call agent with autonomous payment (v2.0 platform-powered)
+
+**Platform validates input BEFORE payment (fail fast!)**
 
 **Returns:**
 ```python
@@ -233,7 +224,7 @@ print(f"Secret (save this!): {list(bytes(keypair))}")
    ```python
    # ❌ DON'T
    secret = [1, 2, 3, ...]
-   
+
    # ✅ DO
    keypair = load_keypair_from_env()
    ```
@@ -382,7 +373,7 @@ pip install git+https://github.com/TettoLabs/tetto-python-sdk.git
 
 # Verify installation
 python -c "import tetto; print(tetto.__version__)"
-# Should print: 0.1.0
+# Should print: 2.0.0
 ```
 
 ---
@@ -451,6 +442,8 @@ result = await client.call_agent(title_gen['id'], input_data)
 
 **Cause:** Input doesn't match agent's expected schema
 
+**v2.0.0 BENEFIT:** Platform validates input BEFORE payment, so you discover errors immediately without losing funds!
+
 **Solution:**
 ```python
 # Get agent's input schema
@@ -466,20 +459,26 @@ input_data = {"text": "Your text here"}  # ✅ Correct
 
 ---
 
-### "Transaction failed"
+### "Transaction building failed"
 
-**Cause:** Network issues or RPC problems
+**Cause:** Platform rejected the request (invalid input, insufficient balance, etc.)
+
+**v2.0.0 SAFETY:** This error occurs BEFORE payment, so no funds are lost!
 
 **Solution:**
 ```python
-# Try with custom RPC endpoint
+# Enable debug mode to see detailed error messages
 client = TettoClient(
     api_url="https://tetto.io",
     network="mainnet",
-    rpc_url="https://api.mainnet-beta.solana.com",  # Custom RPC
     keypair=keypair,
-    debug=True  # Enable debug logging
+    debug=True  # 👈 See detailed logs
 )
+
+# Check the error message for specific issue:
+# - Invalid input → fix input_data
+# - Insufficient balance → add funds to wallet
+# - Agent offline → try different agent
 ```
 
 ---
@@ -538,7 +537,7 @@ for agent_call in agent_calls:
     result = await client.call_agent(...)
     cost = agent['price_usd']
     total_spent += cost
-    
+
     if total_spent > 10.0:  # $10 limit
         print("⚠️  Budget exceeded!")
         break
@@ -556,9 +555,9 @@ for agent_call in agent_calls:
   - Supports coordinators, plugins, and agent registration
   - Ideal for: Production applications, agent development, Node.js/browser
 
-- **[tetto-python-sdk](https://github.com/TettoLabs/tetto-python-sdk)** (THIS REPO - Python SDK v0.1.0)
+- **[tetto-python-sdk](https://github.com/TettoLabs/tetto-python-sdk)** (THIS REPO - Python SDK v2.0.0)
   - Python SDK for calling agents
-  - Client-side architecture (v1.0 pattern)
+  - Platform-powered architecture (v2.0)
   - Ideal for: Python agents, LangChain integration, AI automation
 
 - **[create-tetto-agent](https://github.com/TettoLabs/create-tetto-agent)** (CLI Tool)
@@ -573,6 +572,7 @@ for agent_call in agent_calls:
 
 **Documentation:**
 - [PYTHON_SDK_APPENDIX.md](https://github.com/TettoLabs/tetto-sdk/blob/main/PYTHON_SDK_APPENDIX.md) - Python SDK implementation details and roadmap
+- [MIGRATION_v1_to_v2.md](MIGRATION_v1_to_v2.md) - Migration guide from v0.1.0 to v2.0.0
 
 ---
 
@@ -591,7 +591,7 @@ Ryan Smith
 
 ---
 
-**Version:** 0.1.0
-**Status:** ✅ Beta - Core features working
+**Version:** 2.0.0
+**Status:** ✅ Beta - Platform-powered architecture
 **Python:** >=3.9
 **Tested:** Mainnet compatible

@@ -7,6 +7,139 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2025-11-06
+
+### 🎉 Major Release - Platform-Powered Architecture
+
+This release brings the Python SDK to feature parity with TypeScript SDK v2.0.0, implementing the platform-powered architecture that validates input BEFORE payment, eliminating the risk of stuck funds from invalid input.
+
+### ⚠️ Breaking Changes
+
+**Removed:**
+- ❌ `tetto/transactions.py` - Deleted 184 lines of dangerous client-side transaction code
+  - This file caused stuck funds risk by validating input AFTER payment
+  - Platform now builds all transactions (safer!)
+
+**No API Changes:**
+- ✅ Public API remains unchanged (`call_agent()` signature identical)
+- ✅ Existing code continues to work with v2.0.0
+- ✅ Only internal implementation changed
+
+### 🚀 New Features
+
+**Platform-Powered Transactions:**
+- ✅ Input validation BEFORE payment (fail-fast pattern)
+- ✅ Platform builds unsigned transactions
+- ✅ SDK only signs transactions (~40 lines vs 180 lines)
+- ✅ Platform submits transactions to blockchain
+- ✅ 75% code reduction in payment logic
+
+**Safety Improvements:**
+- ✅ No more stuck funds from invalid input
+- ✅ Errors discovered immediately (before payment)
+- ✅ Better error messages from platform validation
+- ✅ More reliable transaction processing
+
+**Architecture Changes:**
+- ✅ 2-step transaction flow:
+  1. POST `/api/agents/{id}/build-transaction` (validates input, returns unsigned tx)
+  2. SDK signs transaction with `VersionedTransaction`
+  3. POST `/api/agents/call` (submit signed tx)
+- ✅ No RPC connection needed (platform handles everything)
+- ✅ Simpler codebase (easier to maintain)
+
+### 📝 Changed
+
+**Updated Files:**
+- `tetto/client.py`: Completely rewrote `call_agent()` method for v2.0 architecture
+- `tetto/__init__.py`: Updated version to 2.0.0
+- `setup.py`: Updated version to 2.0.0
+- `README.md`: Comprehensive v2.0.0 documentation with safety benefits
+- `AI_LOOK_HERE.md`: Updated for platform-powered architecture
+- `CHANGELOG.md`: Added v2.0.0 release notes (this file)
+
+**New Files:**
+- `MIGRATION_v1_to_v2.md`: Migration guide from v0.1.0 to v2.0.0
+- `V2_UPGRADE_PLAN.md`: Implementation plan and technical details
+
+### 🔄 Migration from v0.1.0
+
+**Good News:** No code changes required! The public API is unchanged.
+
+```python
+# v0.1.0 (Old) - Client builds transaction
+result = await client.call_agent(agent_id, input_data, "USDC")
+
+# v2.0.0 (New) - Platform builds transaction (same API!)
+result = await client.call_agent(agent_id, input_data, "USDC")
+# Now with input validation BEFORE payment!
+```
+
+**What Changed Under the Hood:**
+- v0.1.0: Client built transaction → validated input → sent to RPC (DANGEROUS!)
+- v2.0.0: Platform validates input → builds transaction → SDK signs → Platform submits (SAFE!)
+
+**See:** [MIGRATION_v1_to_v2.md](MIGRATION_v1_to_v2.md) for detailed migration guide
+
+### 🎯 Feature Parity with TypeScript SDK
+
+**Matching TypeScript SDK v2.0.0:**
+- ✅ Platform-powered architecture
+- ✅ 2-step transaction flow
+- ✅ Input validation before payment
+- ✅ Same safety guarantees
+- ✅ Feature parity for calling agents
+
+**Not Yet Implemented (Python-specific roadmap):**
+- ❌ Agent registration (coming in future version)
+- ❌ Coordinator patterns (coming in future version)
+- ❌ Plugin system (coming in future version)
+
+### 📊 Statistics
+
+**Code Reduction:**
+- Deleted: 184 lines (dangerous transaction building code)
+- Added: ~40 lines (transaction signing code)
+- **Net reduction: 75%** in payment logic complexity
+
+**Safety Improvement:**
+- v0.1.0: Input validation AFTER payment → stuck funds risk
+- v2.0.0: Input validation BEFORE payment → fail fast, no stuck funds!
+
+### 🔗 Related Changes
+
+**TypeScript SDK:**
+- Python SDK v2.0.0 now matches TypeScript SDK v2.0.0 architecture
+- Both SDKs use identical platform-powered flow
+- Both SDKs have same safety guarantees
+
+**Platform API:**
+- New endpoint: POST `/api/agents/{id}/build-transaction`
+- Updated endpoint: POST `/api/agents/call` (now accepts payment_intent_id)
+- Platform handles all transaction building and submission
+
+### 📚 Documentation
+
+**Updated:**
+- README.md: Comprehensive v2.0.0 guide with safety benefits
+- AI_LOOK_HERE.md: Platform-powered architecture documentation
+- Examples: Updated comments to reflect v2.0 flow
+
+**New:**
+- MIGRATION_v1_to_v2.md: Step-by-step migration guide
+- V2_UPGRADE_PLAN.md: Technical implementation details
+
+### 🙏 Acknowledgments
+
+This release follows the SDK Maintenance Manifesto principles:
+- "Research first, change second"
+- "Slow and methodical beats fast and sloppy"
+- "Version numbers matter - use semantic versioning"
+
+Special thanks to the TypeScript SDK v2.0.0 for providing the proven architecture patterns.
+
+---
+
 ## [0.1.0] - 2025-10-14
 
 ### Added
@@ -79,31 +212,7 @@ This is the initial foundation release. The Python SDK is designed for **calling
 
 ## [Unreleased]
 
-### Planned for v0.2.0 (Platform-Powered Architecture)
-
-**Breaking Changes:**
-- Migration from client-side to platform-powered transactions
-- Input validation will occur BEFORE payment (safer!)
-- Transaction building moved to platform (75% code reduction)
-
-**New Features:**
-- API key authentication for programmatic access
-- Agent registration support
-- Payment receipt retrieval (`get_receipt()`)
-- Simplified transaction code (remove 180-line transactions.py)
-- Feature parity with TypeScript SDK v2.0 calling features
-
-**Improvements:**
-- Faster transaction processing
-- Better error messages with validation before payment
-- Reduced SDK bundle size
-- Improved reliability through platform handling
-
-**See:** [PYTHON_SDK_APPENDIX.md](https://github.com/TettoLabs/tetto-sdk/blob/main/PYTHON_SDK_APPENDIX.md) for implementation details
-
----
-
-### Planned for v0.3.0+ (Advanced Features)
+### Planned for Future Versions (v2.1.0+)
 
 **Coordinator Patterns:**
 - Multi-agent workflow orchestration
@@ -125,34 +234,40 @@ This is the initial foundation release. The Python SDK is designed for **calling
 
 ## Version History
 
+- **v2.0.0** (2025-11-06) - Platform-powered architecture (CURRENT)
 - **v0.1.0** (2025-10-14) - Initial release, calling-only SDK
-- **v0.2.0** (Planned 2025-Q1) - Platform-powered architecture
-- **v0.3.0** (Planned 2025-Q2) - Advanced features (coordinators, plugins)
+- **v2.1.0+** (Planned) - Advanced features (coordinators, plugins, agent registration)
 
 ---
 
 ## Migration Guides
 
-### v0.1.0 → v0.2.0 (When Released)
+### v0.1.0 → v2.0.0 (Released 2025-11-06)
+
+**Good News:** No code changes required! The public API is unchanged.
 
 **Transaction Building:**
 ```python
-# v0.1.0 (Current) - Client builds transaction
+# v0.1.0 (Old) - Client builds transaction
 result = await client.call_agent(agent_id, input_data, "USDC")
 
-# v0.2.0 (Future) - Platform builds transaction
-# Same API, but platform handles transaction building
+# v2.0.0 (New) - Platform builds transaction (same API!)
 result = await client.call_agent(agent_id, input_data, "USDC")
-# Input validated FIRST, transaction built by platform
+# Now with input validation BEFORE payment!
 ```
 
-**No breaking API changes expected** - the client API will remain the same, but the underlying transaction handling will be improved.
+**What Changed Under the Hood:**
+- v0.1.0: Client built transaction → validated input → sent to RPC (DANGEROUS!)
+- v2.0.0: Platform validates input → builds transaction → SDK signs → Platform submits (SAFE!)
 
 **Key Benefits:**
 - Input validation before payment (fail-fast pattern)
-- Simpler SDK codebase (remove transactions.py)
+- Simpler SDK codebase (removed transactions.py)
 - Better error messages
 - Faster processing
+- No stuck funds risk
+
+**See:** [MIGRATION_v1_to_v2.md](MIGRATION_v1_to_v2.md) for detailed migration guide
 
 ---
 
