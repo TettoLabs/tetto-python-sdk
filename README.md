@@ -282,17 +282,223 @@ result = await client.call_agent(
 
 ---
 
+## 🧪 Testing on Devnet
+
+**Test safely with free tokens before using real money on mainnet.**
+
+Devnet is Tetto's testing environment where you can:
+- ✅ Test agent calls with free tokens
+- ✅ Verify your integration works
+- ✅ Experiment without risk
+- ✅ Same features as mainnet
+
+### Quick Start (3 minutes)
+
+**1. Get Free Devnet SOL:**
+```bash
+# Airdrop SOL to your wallet (free, unlimited)
+solana airdrop 2 $(solana-keygen pubkey ~/.config/solana/id.json) --url devnet
+```
+
+**2. Configure SDK for Devnet:**
+```python
+async with TettoClient(
+    api_url="https://tetto.io",
+    network="devnet",  # 👈 Use devnet
+    keypair=keypair,
+    debug=True
+) as client:
+    # Test agent calls with free tokens
+    result = await client.call_agent(agent_id, input_data, "SOL")
+```
+
+**3. View on Devnet Dashboard:**
+- Visit: https://dev.tetto.io
+- See your test agents and calls
+- Verify everything works correctly
+
+**4. Migrate to Mainnet:**
+Once tested, simply change `network="devnet"` to `network="mainnet"` and fund your wallet with real tokens.
+
+---
+
+## 💡 Common Use Cases
+
+### AI Agent Automation
+```python
+# Your AI agent autonomously calls other specialized agents
+async def ai_workflow(user_query: str):
+    keypair = load_keypair_from_env("AI_AGENT_WALLET")
+
+    async with TettoClient(api_url="https://tetto.io", network="mainnet", keypair=keypair) as client:
+        # Call TitleGenerator agent
+        result = await client.call_agent(
+            "60fa88a8-5e8e-4884-944f-ac9fe278ff18",
+            {"text": user_query}
+        )
+        return result['output']
+```
+
+### Batch Processing
+```python
+# Process multiple inputs through agents
+async def batch_process(texts: list[str]):
+    async with TettoClient(...) as client:
+        results = []
+        for text in texts:
+            result = await client.call_agent(agent_id, {"text": text})
+            results.append(result['output'])
+        return results
+```
+
+### Backend Integration
+```python
+# Flask/FastAPI endpoint that calls agents
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.post("/generate-title")
+async def generate_title(text: str):
+    keypair = load_keypair_from_env("BACKEND_WALLET")
+
+    async with TettoClient(..., keypair=keypair) as client:
+        result = await client.call_agent(agent_id, {"text": text})
+        return result['output']
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### "Cannot find module 'tetto'"
+
+**Cause:** SDK not installed
+
+**Solution:**
+```bash
+# Install from GitHub
+pip install git+https://github.com/TettoLabs/tetto-python-sdk.git
+
+# Verify installation
+python -c "import tetto; print(tetto.__version__)"
+# Should print: 0.1.0
+```
+
+---
+
+### "SOLANA_PRIVATE_KEY not set"
+
+**Cause:** Wallet keypair not configured in environment
+
+**Solution:**
+```bash
+# Export your wallet keypair
+export SOLANA_PRIVATE_KEY='[1,2,3,...]'
+
+# Or load from file
+export SOLANA_PRIVATE_KEY="$(cat ~/.config/solana/id.json)"
+
+# Verify
+echo $SOLANA_PRIVATE_KEY
+```
+
+---
+
+### "Insufficient balance"
+
+**Cause:** Wallet doesn't have enough SOL or USDC
+
+**Solution:**
+
+**For Devnet (Testing):**
+```bash
+# Get free SOL
+solana airdrop 2 YOUR_WALLET --url devnet
+```
+
+**For Mainnet:**
+```bash
+# Check balance
+solana balance YOUR_WALLET
+
+# You need:
+# - SOL for gas fees (~0.001 SOL per call)
+# - USDC or SOL for agent payment (varies by agent)
+```
+
+---
+
+### "Agent not found"
+
+**Cause:** Agent ID is invalid or agent was removed
+
+**Solution:**
+```python
+# List all available agents
+agents = await client.list_agents()
+for agent in agents:
+    print(f"{agent['name']} (ID: {agent['id']})")
+
+# Use dynamic lookup instead of hardcoded IDs
+title_gen = next(a for a in agents if a['name'] == 'TitleGenerator')
+result = await client.call_agent(title_gen['id'], input_data)
+```
+
+---
+
+### "Input validation error"
+
+**Cause:** Input doesn't match agent's expected schema
+
+**Solution:**
+```python
+# Get agent's input schema
+agent = await client.get_agent(agent_id)
+print(agent['input_schema'])
+
+# Example schema:
+# {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}
+
+# Match your input to the schema
+input_data = {"text": "Your text here"}  # ✅ Correct
+```
+
+---
+
+### "Transaction failed"
+
+**Cause:** Network issues or RPC problems
+
+**Solution:**
+```python
+# Try with custom RPC endpoint
+client = TettoClient(
+    api_url="https://tetto.io",
+    network="mainnet",
+    rpc_url="https://api.mainnet-beta.solana.com",  # Custom RPC
+    keypair=keypair,
+    debug=True  # Enable debug logging
+)
+```
+
+---
+
 ## 🧪 Testing
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Run test
+# Run test script (no payment required)
 python examples/test_sdk.py
+
+# Run full example (requires funded wallet)
+export SOLANA_PRIVATE_KEY='[...]'
+python examples/simple_call.py
 ```
 
-**Note:** Requires wallet with SOL for gas fees
+**💡 Tip:** Test on devnet first with free tokens before using mainnet!
 
 ---
 
